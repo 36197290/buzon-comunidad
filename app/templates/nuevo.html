@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block titulo %}Nuevo reporte{% endblock %}
+{% block contenido %}
+<div class="row justify-content-center"><div class="col-lg-8">
+<h1 class="h3 mb-1"><i class="bi bi-pencil-square text-primary me-2"></i>Nuevo reporte</h1>
+<p class="text-muted mb-3">Cuéntanos qué está pasando; el sistema calculará una prioridad sugerida.</p>
+<div class="card"><div class="card-body p-4">
+<form method="post">
+  <input type="hidden" name="csrf" value="{{ csrf_token }}">
+  <div class="mb-3"><label class="form-label" for="titulo">Título</label>
+    <input class="form-control" id="titulo" name="titulo" maxlength="150" required value="{{ form.get('titulo', '') }}"></div>
+  <div class="row">
+    <div class="col-md-6 mb-3"><label class="form-label" for="id_categoria">Categoría</label>
+      <select class="form-select" id="id_categoria" name="id_categoria" required>
+        <option value="">Elige una…</option>
+        {% for c in categorias %}<option value="{{ c.id_categoria }}" {{ 'selected' if form.get('id_categoria') == c.id_categoria|string }}>{{ c.nombre }}</option>{% endfor %}
+      </select></div>
+    <div class="col-md-6 mb-3"><label class="form-label" for="personas_afectadas">Personas afectadas (aprox.)</label>
+      <input class="form-control" id="personas_afectadas" name="personas_afectadas" type="number" min="1" required value="{{ form.get('personas_afectadas', '') }}"></div>
+  </div>
+  <div class="mb-3"><label class="form-label" for="descripcion">Descripción del problema</label>
+    <textarea class="form-control" id="descripcion" name="descripcion" rows="4" maxlength="2000" required>{{ form.get('descripcion', '') }}</textarea></div>
+  <div class="mb-3"><label class="form-label" for="ubicacion">Ubicación</label>
+    <input class="form-control" id="ubicacion" name="ubicacion" maxlength="300" required value="{{ form.get('ubicacion', '') }}"></div>
+  <div class="row">
+    <div class="col-md-6 mb-3"><label class="form-label" for="gravedad">¿Qué tan grave es?</label>
+      <select class="form-select" id="gravedad" name="gravedad" required>
+        {% for v, t in [('leve','Leve: es una molestia'),('moderada','Moderada: afecta la vida diaria'),('grave','Grave: no se puede vivir con normalidad')] %}
+        <option value="{{ v }}" {{ 'selected' if form.get('gravedad') == v }}>{{ t }}</option>{% endfor %}
+      </select></div>
+    <div class="col-md-6 mb-3"><label class="form-label" for="riesgo">Riesgo para salud o seguridad</label>
+      <select class="form-select" id="riesgo" name="riesgo" required>
+        {% for v, t in [('ninguno','Ninguno'),('moderado','Moderado'),('alto','Alto')] %}
+        <option value="{{ v }}" {{ 'selected' if form.get('riesgo') == v }}>{{ t }}</option>{% endfor %}
+      </select></div>
+  </div>
+  <div class="form-check mb-4">
+    <input class="form-check-input" type="checkbox" id="es_urgente" name="es_urgente" {{ 'checked' if form.get('es_urgente') }}>
+    <label class="form-check-label" for="es_urgente">Hay peligro inmediato (marcar como urgente)</label>
+  </div>
+  <button class="btn btn-primary">Enviar reporte</button>
+  <a class="btn btn-link" href="{{ url_for('web.mis_reportes') }}">Cancelar</a>
+</form></div></div></div></div>
+{% endblock %}

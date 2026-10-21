@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m with context %}
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block contenido %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+  <div><h1 class="h3 m-0">{{ titulo }}</h1>
+    <div class="text-muted small">{{ filas|length }} reporte{{ '' if filas|length == 1 else 's' }}</div></div>
+  {% if es_panel %}
+  <form method="get"><select name="estado" class="form-select" onchange="this.form.submit()">
+    <option value="">Todos los estados</option>
+    {% for e in estados %}<option value="{{ e }}" {{ 'selected' if e == estado_actual }}>{{ e|replace('_', ' ')|capitalize }}</option>{% endfor %}
+  </select></form>
+  {% else %}
+  <a class="btn btn-primary" href="{{ url_for('web.nuevo_reporte') }}"><i class="bi bi-plus-lg me-1"></i>Nuevo reporte</a>
+  {% endif %}
+</div>
+
+{% if stats %}
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">{{ m.stat('indigo', stats.total, 'Reportes en total', 'bi-inboxes') }}</div>
+  <div class="col-6 col-lg-3">{{ m.stat('sky', stats.por_revisar, 'Por revisar', 'bi-search') }}</div>
+  <div class="col-6 col-lg-3">{{ m.stat('amber', stats.en_ejecucion, 'En ejecución', 'bi-tools') }}</div>
+  <div class="col-6 col-lg-3">{{ m.stat('green', stats.resueltos, 'Resueltos', 'bi-check-circle') }}</div>
+</div>
+{% endif %}
+
+<div class="row g-3">
+  {% for f in filas %}<div class="col-md-6 col-xl-4">{{ m.tarjeta(f, es_panel) }}</div>
+  {% else %}
+  <div class="col-12"><div class="card"><div class="card-body text-center text-muted py-5">
+    <i class="bi bi-inbox fs-1"></i><p class="mt-2 mb-0">No hay reportes para mostrar.</p></div></div></div>
+  {% endfor %}
+</div>
+{% endblock %}

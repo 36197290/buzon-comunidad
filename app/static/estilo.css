@@ -1,0 +1,77 @@
+:root{--ink:#0f172a;--muted:#64748b;--brand:#4f46e5;--brand2:#7c3aed;--ok:#16a34a;--okbg:#f0fdf4;--bg:#f4f6fb;--line:#e8ecf4}
+body{font-family:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+a{text-decoration:none}
+h1,h2,h3,.h3,.h4{letter-spacing:-.02em;font-weight:700}
+
+/* barra superior */
+.topbar{background:linear-gradient(120deg,#1e1b4b 0%,#4338ca 55%,#6d28d9 100%);box-shadow:0 4px 20px rgba(67,56,202,.25)}
+.topbar .brand{color:#fff;font-weight:800;font-size:1.15rem;letter-spacing:-.02em}
+.topbar .navlink{color:#e0e7ff;font-weight:500;padding:.4rem .9rem;border-radius:999px;transition:.15s}
+.topbar .navlink:hover,.topbar .navlink.active{background:rgba(255,255,255,.18);color:#fff}
+.topbar .quien{color:#c7d2fe;font-size:.8rem;line-height:1.1;text-align:right}
+.topbar .quien strong{color:#fff;display:block;font-size:.88rem}
+
+/* componentes base de Bootstrap, suavizados */
+.card{border:1px solid var(--line);border-radius:18px;box-shadow:0 6px 24px rgba(15,23,42,.05)}
+.card-header{background:#fff;border-bottom:1px solid var(--line);border-radius:18px 18px 0 0!important;font-weight:600}
+.btn{border-radius:999px;font-weight:600;padding:.45rem 1.1rem}
+.btn-sm{padding:.3rem .85rem}
+.btn-primary{background:linear-gradient(120deg,var(--brand),var(--brand2));border:0;box-shadow:0 6px 16px rgba(79,70,229,.3)}
+.btn-primary:hover{filter:brightness(1.07)}
+.btn-success{background:var(--ok);border:0}
+.form-control,.form-select{border-radius:12px;border-color:#dbe1ee;padding:.55rem .85rem}
+.form-control:focus,.form-select:focus{border-color:var(--brand);box-shadow:0 0 0 .2rem rgba(79,70,229,.15)}
+.alert{border:0;border-radius:14px;box-shadow:0 4px 14px rgba(15,23,42,.06)}
+
+/* etiquetas (estado, urgencia, prioridad) */
+.pill{display:inline-flex;align-items:center;gap:.3rem;padding:.22rem .7rem;border-radius:999px;font-size:.74rem;font-weight:700;white-space:nowrap}
+.pill-recibido{background:#e2e8f0;color:#334155}.pill-revisado{background:#dbeafe;color:#1d4ed8}
+.pill-asignado{background:#e0e7ff;color:#4338ca}.pill-en_proceso{background:#fef3c7;color:#b45309}
+.pill-solucionado{background:#dcfce7;color:#15803d}.pill-rechazado{background:#fee2e2;color:#b91c1c}
+.pill-retirado{background:#e5e7eb;color:#374151}.pill-urgente{background:#ffe4e6;color:#be123c}
+.pill-pospuesto{background:#f3e8ff;color:#7e22ce}
+.prio{display:inline-flex;align-items:center;padding:.22rem .7rem;border-radius:10px;font-size:.78rem;font-weight:700}
+.prio-alta{background:#fee2e2;color:#b91c1c}.prio-media{background:#fef3c7;color:#b45309}.prio-baja{background:#e0f2fe;color:#0369a1}
+
+/* tarjetas de reporte: el color del borde sigue al estado; verde = solucionado */
+.rep-card{--c:#94a3b8;display:block;background:#fff;border:1px solid var(--line);border-left:6px solid var(--c);border-radius:16px;
+  padding:1.1rem 1.2rem;color:inherit;height:100%;box-shadow:0 4px 18px rgba(15,23,42,.05);transition:.18s}
+a.rep-card:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(15,23,42,.12);color:inherit}
+.rep-card .codigo{font-size:.75rem;font-weight:700;color:var(--muted);letter-spacing:.04em}
+.rep-card .rep-titulo{font-size:1.02rem;margin:.35rem 0 .3rem}
+.estado-recibido{--c:#94a3b8}.estado-revisado{--c:#3b82f6}.estado-asignado{--c:#6366f1}.estado-en_proceso{--c:#f59e0b}
+.estado-rechazado{--c:#ef4444}.estado-retirado{--c:#6b7280}
+.estado-solucionado{--c:var(--ok);background:linear-gradient(180deg,var(--okbg),#fff 70%);border-color:#bbf7d0}
+
+/* tarjetas de cifras */
+.stat{border-radius:18px;padding:1.1rem 1.3rem;color:#fff;height:100%;box-shadow:0 10px 24px rgba(15,23,42,.12)}
+.stat .n{font-size:2rem;font-weight:800;line-height:1}.stat .t{font-size:.82rem;opacity:.92;font-weight:500;margin-top:.35rem}
+.stat-indigo{background:linear-gradient(135deg,#4f46e5,#7c3aed)}.stat-sky{background:linear-gradient(135deg,#0ea5e9,#2563eb)}
+.stat-green{background:linear-gradient(135deg,#22c55e,#15803d)}.stat-amber{background:linear-gradient(135deg,#f59e0b,#ea580c)}
+
+/* pestanas del alcalde */
+.tabs-pill .nav-link{color:var(--muted);font-weight:600;border-radius:999px;padding:.5rem 1.1rem}
+.tabs-pill .nav-link.active{background:#fff;color:var(--brand);box-shadow:0 4px 14px rgba(15,23,42,.08)}
+.tabs-pill .badge-n{background:#e2e8f0;color:#334155;border-radius:999px;padding:.05rem .5rem;font-size:.72rem;margin-left:.3rem}
+.tabs-pill .nav-link.active .badge-n{background:var(--brand);color:#fff}
+
+/* linea de tiempo */
+.timeline{list-style:none;margin:0;padding:.4rem 1rem .2rem 1.6rem;border-left:2px solid var(--line);margin-left:1rem}
+.timeline li{position:relative;padding:0 0 1.15rem .9rem}
+.timeline li::before{content:"";position:absolute;left:-1.3rem;top:.35rem;width:.75rem;height:.75rem;border-radius:50%;
+  background:var(--brand);border:2px solid #fff;box-shadow:0 0 0 2px var(--brand)}
+.timeline li.t-solucionado::before{background:var(--ok);box-shadow:0 0 0 2px var(--ok)}
+.timeline li.t-interno::before{background:#94a3b8;box-shadow:0 0 0 2px #94a3b8}
+
+/* banner de obra terminada */
+.banner-ok{display:flex;gap:.8rem;align-items:center;background:linear-gradient(120deg,#16a34a,#15803d);color:#fff;
+  border-radius:18px;padding:1rem 1.3rem;margin-bottom:1.5rem;box-shadow:0 10px 24px rgba(22,163,74,.3)}
+.banner-ok i{font-size:1.8rem}
+
+/* login */
+.hero{background:linear-gradient(135deg,#1e1b4b,#4338ca 60%,#7c3aed);color:#fff;border-radius:26px;padding:2.6rem;height:100%;
+  box-shadow:0 20px 40px rgba(67,56,202,.3)}
+.hero h1{font-size:2.2rem;font-weight:800;line-height:1.15}
+.hero li{margin-bottom:.7rem;color:#e0e7ff}.hero li i{color:#a5b4fc;margin-right:.5rem}
+.barra{height:8px;border-radius:99px;background:#e2e8f0;overflow:hidden}.barra>span{display:block;height:100%;background:linear-gradient(90deg,#6366f1,#8b5cf6)}
+footer.pie{color:var(--muted);font-size:.8rem;text-align:center;padding:2rem 0 1rem}

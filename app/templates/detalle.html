@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m with context %}
+{% block titulo %}{{ r.codigo }}{% endblock %}
+{% block contenido %}
+<div class="d-flex justify-content-between align-items-start mb-3">
+  <div>
+    <h1 class="h3 m-0">{% if r.es_urgente and r.estado not in ('SOLUCIONADO', 'RECHAZADO', 'RETIRADO') %}<span class="pill pill-urgente me-1"><i class="bi bi-exclamation-triangle-fill"></i> Urgente</span> {% endif %}{{ r.titulo }}</h1>
+    <div class="text-muted">{{ r.codigo }} · {{ r.comunidad }} · {{ r.categoria }}</div>
+  </div>
+  <span class="fs-6">{{ m.pill(r.estado) }}</span>
+</div>
+
+{% if r.estado == 'SOLUCIONADO' %}
+<div class="banner-ok"><i class="bi bi-check-circle-fill"></i>
+  <div><strong>¡Obra realizada!</strong><div class="small opacity-75">Este reporte fue solucionado el {{ r.fecha_cierre|fecha }}.</div></div></div>
+{% endif %}
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card mb-4"><div class="card-body">
+      <p>{{ r.descripcion }}</p>
+      <dl class="row mb-0 small">
+        <dt class="col-sm-4">Ubicación</dt><dd class="col-sm-8">{{ r.ubicacion }}</dd>
+        <dt class="col-sm-4">Personas afectadas</dt><dd class="col-sm-8">{{ r.personas_afectadas }}</dd>
+        <dt class="col-sm-4">Creado por</dt><dd class="col-sm-8">{{ usuario_de(r.id_usuario).nombre }} el {{ r.fecha_creacion|fecha }}</dd>
+        {% if r.fecha_cierre %}<dt class="col-sm-4">Cerrado</dt><dd class="col-sm-8">{{ r.fecha_cierre|fecha }}</dd>{% endif %}
+        {% if asignacion %}<dt class="col-sm-4">Asignado a</dt>
+          <dd class="col-sm-8">{{ departamentos[asignacion.id_departamento] }} · {{ usuario_de(asignacion.id_responsable).nombre }}</dd>{% endif %}
+      </dl>
+    </div></div>
+
+    <div class="card"><div class="card-header">Seguimiento</div><div class="card-body pt-3">
+      <ul class="timeline">
+      {% for e in eventos %}
+        <li class="{{ 't-solucionado' if e.estado_nuevo == 'SOLUCIONADO' }} {{ 't-interno' if not e.visible_ciudadano }}">
+          <div class="d-flex justify-content-between gap-2">
+            <strong>{{ e.tipo_evento|replace('_', ' ')|capitalize }}{% if e.estado_nuevo %} → {{ e.estado_nuevo|replace('_', ' ')|capitalize }}{% endif %}</strong>
+            <span class="small text-muted text-nowrap">{{ e.fecha_evento|fecha }}</span>
+          </div>
+          {% if e.observacion %}<div class="small text-muted">{{ e.observacion }}</div>{% endif %}
+          {% if not e.visible_ciudadano %}<span class="badge text-bg-light border">Interno</span>{% endif %}
+        </li>
+      {% endfor %}
+      </ul></div></div>
+  </div>
+
+  <div class="col-lg-5">
+    {% if r.evaluacion %}
+    <div class="card mb-4"><div class="card-body">
+      <div class="d-flex justify-content-between mb-2">
+        <span class="fw-semibold">Prioridad</span>
+        <span class="prio prio-{{ r.evaluacion.nivel|lower }}">{{ r.evaluacion.nivel|capitalize }} · {{ r.evaluacion.total }}/100</span>
+      </div>
+      <div class="progress mb-2"><div class="progress-bar bg-{{ COLOR_NIVEL[r.evaluacion.nivel] }}" style="width: {{ r.evaluacion.total }}%"></div></div>
+      <div class="small text-muted">Gravedad {{ r.evaluacion.pts_gravedad }}/35 · Personas {{ r.evaluacion.pts_personas }}/25 ·
+        Riesgo {{ r.evaluacion.pts_riesgo }}/25 · Tiempo {{ r.evaluacion.pts_tiempo }}/15
+        ({{ 'sugerida por el sistema' if r.evaluacion.es_sugerida else 'revisada por el personal' }})</div>
+    </div></div>
+    {% endif %}
+
+    {% if acciones %}
+    <div class="card mb-4"><div class="card-header">Cambiar estado</div><div class="card-body">
+      {% for destino, requiere in acciones %}
+      <form method="post" action="{{ url_for('web.cambiar_estado', id_reporte=r.id_reporte) }}" class="mb-3">
+        <input type="hidden" name="csrf" value="{{ csrf_token }}">
+        <input type="hidden" name="version" value="{{ r.version }}">
+        <input type="hidden" name="nuevo" value="{{ destino }}">
+        {% if requiere %}<input class="form-control form-control-sm mb-2" name="motivo" placeholder="Motivo o descripción (obligatorio)" required>{% endif %}
+        <button class="btn btn-sm btn-outline-{{ COLOR_ESTADO[destino] }}">Pasar a {{ destino|replace('_', ' ')|capitalize }}</button>
+      </form>
+      {% endfor %}
+    </div></div>
+    {% endif %}
+
+    {% if puede_asignar %}
+    <div class="card mb-4"><div class="card-header">Asignar responsable</div><div class="card-body">
+      <form method="post" action="{{ url_for('web.asignar', id_reporte=r.id_reporte) }}">
+        <input type="hidden" name="csrf" value="{{ csrf_token }}">
+        <input type="hidden" name="version" value="{{ r.version }}">
+        <select class="form-select form-select-sm mb-2" name="id_responsable" required>
+          {% for p in responsables %}<option value="{{ p.id_usuario }}">{{ p.nombre }} · {{ departamentos[p.id_departamento] }}</option>{% endfor %}
+        </select>
+        <button class="btn btn-sm btn-primary">Asignar</button>
+      </form>
+    </div></div>
+    {% endif %}
+
+    {% if puede_priorizar %}
+    <div class="card"><div class="card-header">Revisar prioridad</div><div class="card-body">
+      <form method="post" action="{{ url_for('web.prioridad', id_reporte=r.id_reporte) }}">
+        <input type="hidden" name="csrf" value="{{ csrf_token }}">
+        <div class="row g-2 mb-2">
+          {% for campo, nombre in [('pts_gravedad','Gravedad'),('pts_personas','Personas'),('pts_riesgo','Riesgo'),('pts_tiempo','Tiempo')] %}
+          <div class="col-6"><label class="form-label small mb-0">{{ nombre }} (0–{{ MAXIMOS[campo] }})</label>
+            <input class="form-control form-control-sm" type="number" name="{{ campo }}" min="0" max="{{ MAXIMOS[campo] }}" value="{{ r.evaluacion[campo] }}" required></div>
+          {% endfor %}
+        </div>
+        <input class="form-control form-control-sm mb-2" name="motivo_revision" placeholder="Motivo de la revisión (obligatorio)" required>
+        <button class="btn btn-sm btn-outline-primary">Guardar revisión</button>
+      </form>
+    </div></div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

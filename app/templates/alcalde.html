@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m with context %}
+{% block titulo %}Decisiones del alcalde{% endblock %}
+{% block contenido %}
+<div class="mb-4">
+  <h1 class="h3 m-0">Decisiones del alcalde</h1>
+  <div class="text-muted">La prioridad es una medida técnica; aquí se decide qué se ejecuta primero.</div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">{{ m.stat('indigo', stats.por_decidir, 'Por decidir', 'bi-hourglass-split') }}</div>
+  <div class="col-6 col-lg-3">{{ m.stat('amber', stats.en_ejecucion, 'En ejecución', 'bi-tools') }}</div>
+  <div class="col-6 col-lg-3">{{ m.stat('green', stats.resueltos, 'Resueltos · ' ~ stats.pct_resueltos ~ '% del total', 'bi-check-circle-fill') }}</div>
+  <div class="col-6 col-lg-3">{{ m.stat('sky', (stats.dias_promedio ~ ' días') if stats.dias_promedio is not none else '—', 'Tiempo promedio de solución', 'bi-stopwatch') }}</div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    {% set tabs = [('decidir', 'Por decidir', 'bi-hourglass-split'), ('pospuestos', 'Pospuestos', 'bi-pause-circle'),
+                       ('ejecucion', 'En ejecución', 'bi-tools'), ('resueltos', 'Resueltos', 'bi-check-circle')] %}
+    <ul class="nav tabs-pill mb-3 gap-1">
+      {% for clave, nombre, icono in tabs %}
+      <li class="nav-item"><a class="nav-link {{ 'active' if vista == clave }}" href="{{ url_for('web.alcalde', vista=clave) }}">
+        <i class="bi {{ icono }} me-1"></i>{{ nombre }}<span class="badge-n">{{ grupos[clave]|length }}</span></a></li>
+      {% endfor %}
+    </ul>
+
+    {% for f in grupos[vista] %}
+    <div class="rep-card estado-{{ f.estado|lower }} mb-3" style="height:auto">
+      <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+        <div>
+          <span class="codigo">{{ f.codigo }}</span>
+          <h3 class="rep-titulo mb-1"><a class="text-reset" href="{{ url_for('web.detalle', id_reporte=f.id_reporte) }}">{{ f.titulo }}</a></h3>
+          <div class="text-muted small"><i class="bi bi-geo-alt-fill"></i> {{ f.comunidad }} · {{ f.categoria }} · {{ f.personas_afectadas }} personas afectadas</div>
+        </div>
+        <div class="d-flex flex-column align-items-end gap-1">
+          {{ m.pill(f.estado) }}
+          <div class="d-flex gap-1">
+            {% if f.es_urgente and vista in ('decidir', 'pospuestos', 'ejecucion') %}<span class="pill pill-urgente"><i class="bi bi-exclamation-triangle-fill"></i> Urgente</span>{% endif %}
+            {{ m.prio(f.evaluacion) }}
+          </div>
+        </div>
+      </div>
+      <p class="small mt-2 mb-2">{{ f.descripcion|truncate(140) }}</p>
+
+      {% if vista == 'pospuestos' and f.decision %}
+        <div class="small mb-2" style="color:#7e22ce"><i class="bi bi-pause-circle-fill"></i> Pospuesto el {{ f.decision.fecha|fecha }}: {{ f.decision.motivo }}</div>
+      {% endif %}
+      {% if vista == 'ejecucion' and f.asignacion %}
+        <div class="small text-muted"><i class="bi bi-person-workspace"></i> {{ departamentos[f.asignacion.id_departamento] }} · {{ usuario_de(f.asignacion.id_responsable).nombre }}</div>
+      {% endif %}
+      {% if vista == 'resueltos' %}
+        <div class="small fw-semibold" style="color:#15803d"><i class="bi bi-check-circle-fill"></i> Solucionado el {{ f.fecha_cierre|fecha }} · {{ f.dias }} días desde el reporte</div>
+      {% endif %}
+
+      {% if vista in ('decidir', 'pospuestos') %}
+      <div id="acc-{{ f.id_reporte }}" class="mt-3">
+        <div class="d-flex flex-wrap gap-2">
+          <button class="btn btn-sm btn-primary" data-bs-toggle="collapse" data-bs-target="#ap-{{ f.id_reporte }}"><i class="bi bi-check2-circle me-1"></i>Aprobar y asignar</button>
+          {% if vista == 'decidir' %}
+          <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#po-{{ f.id_reporte }}"><i class="bi bi-pause-circle me-1"></i>Posponer</button>{% endif %}
+          <button class="btn btn-sm btn-outline-danger" data-bs-toggle="collapse" data-bs-target="#re-{{ f.id_reporte }}"><i class="bi bi-x-circle me-1"></i>Rechazar</button>
+          <a class="btn btn-sm btn-link" href="{{ url_for('web.detalle', id_reporte=f.id_reporte) }}">Ver detalle</a>
+        </div>
+        {% for clave, texto, necesita_resp in [('ap', 'Aprobar y asignar', true), ('po', 'Posponer', false), ('re', 'Rechazar', false)] %}
+        {% if not (clave == 'po' and vista == 'pospuestos') %}
+        <div id="{{ clave }}-{{ f.id_reporte }}" class="collapse mt-3" data-bs-parent="#acc-{{ f.id_reporte }}">
+          <form method="post" action="{{ url_for('web.decision', id_reporte=f.id_reporte) }}" class="row g-2">
+            <input type="hidden" name="csrf" value="{{ csrf_token }}">
+            <input type="hidden" name="version" value="{{ f.version }}">
+            <input type="hidden" name="decision" value="{{ {'ap': 'APROBADA', 'po': 'POSPUESTA', 're': 'RECHAZADA'}[clave] }}">
+            {% if necesita_resp %}
+            <div class="col-md-7"><select class="form-select form-select-sm" name="id_responsable" required>
+              {% for p in responsables %}<option value="{{ p.id_usuario }}">{{ p.nombre }} · {{ departamentos[p.id_departamento] }}</option>{% endfor %}
+            </select></div>
+            <div class="col-md-5"><button class="btn btn-sm btn-primary w-100">Confirmar aprobación</button></div>
+            {% else %}
+            <div class="col-md-8"><input class="form-control form-control-sm" name="motivo" placeholder="Motivo (obligatorio)" required></div>
+            <div class="col-md-4"><button class="btn btn-sm btn-{{ 'danger' if clave == 're' else 'secondary' }} w-100">Confirmar</button></div>
+            {% endif %}
+          </form>
+        </div>
+        {% endif %}
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    {% else %}
+    <div class="card"><div class="card-body text-center text-muted py-5">
+      <i class="bi bi-emoji-smile fs-1"></i><p class="mt-2 mb-0">No hay reportes en esta sección.</p></div></div>
+    {% endfor %}
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card mb-4"><div class="card-header">Reportes por comunidad</div><div class="card-body">
+      {% set mayor = stats.por_comunidad[0][1] if stats.por_comunidad else 1 %}
+      {% for nombre, n in stats.por_comunidad %}
+      <div class="mb-3"><div class="d-flex justify-content-between small mb-1"><span>{{ nombre }}</span><strong>{{ n }}</strong></div>
+        <div class="barra"><span style="width: {{ (100 * n / mayor)|round|int }}%"></span></div></div>
+      {% endfor %}
+    </div></div>
+    <div class="card"><div class="card-header">Estado general</div><div class="card-body">
+      {% for e, n in stats.por_estado.items() %}
+      <div class="d-flex justify-content-between align-items-center mb-2">{{ m.pill(e) }}<strong>{{ n }}</strong></div>
+      {% endfor %}
+    </div></div>
+  </div>
+</div>
+{% endblock %}
